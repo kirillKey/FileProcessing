@@ -14,16 +14,23 @@
     NSInteger bytesRead;
 }
 
+@property (nonatomic, strong) CompletionBlock completion;
+@property (nonatomic, strong) StringProcessingBlock processingBlock;
+
 @end
 
 static const NSInteger maxBufLength = 512;
 
 @implementation FileStreamParser
 
-- (id)initWithPath:(NSString *)path {
+- (id)initWithPath:(NSString *)path withProcessingBlock:(StringProcessingBlock)processingBlock withCompletionBlock:(CompletionBlock)completionBlock
+{
     self = [super init];
     if (self)
     {
+        self.completion = completionBlock;
+        self.processingBlock = processingBlock;
+
         [self setUpStreamForFile:path];
     }
     
@@ -34,10 +41,12 @@ static const NSInteger maxBufLength = 512;
 {
     iStream = [[NSInputStream alloc] initWithFileAtPath:path];
     [iStream setDelegate:self];
-    [iStream scheduleInRunLoop:[NSRunLoop currentRunLoop]
-                       forMode:NSDefaultRunLoopMode];
-    [iStream open];
-    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:5]];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [iStream scheduleInRunLoop:[NSRunLoop currentRunLoop]
+                           forMode:NSDefaultRunLoopMode];
+        [iStream open];
+    });
 }
 
 #pragma mark - NSStreamdelegate - 
@@ -63,7 +72,11 @@ static const NSInteger maxBufLength = 512;
                 
                 NSString *stringToAnalyse = [[NSString alloc] initWithData: data
                                                                   encoding: NSWindowsCP1251StringEncoding];
-                NSLog(@"buffered string %@", stringToAnalyse);
+                if (self.processingBlock)
+                {
+                    self.processingBlock(stringToAnalyse);
+                }
+                
             } else {
                 NSLog(@"no buffer");
             }
@@ -83,6 +96,11 @@ static const NSInteger maxBufLength = 512;
             [iStream close];
             [iStream removeFromRunLoop: [NSRunLoop currentRunLoop]
                                forMode: NSDefaultRunLoopMode];
+            
+            if (self.completion) {
+                self.completion();
+            }
+
             break;
         }
         default:

@@ -8,8 +8,12 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void(^StringProcessingBlock)(NSString* string);
+typedef void(^CompletionBlock)();
+
 @interface FileStreamParser : NSObject
 @property (nonatomic, strong) NSString *filePath;
-- (id)initWithPath:(NSString*)path;
+- (id)initWithPath:(NSString*)path withProcessingBlock:(StringProcessingBlock)processingBlock
+withCompletionBlock:(CompletionBlock) completionBlock;
 
 @end
