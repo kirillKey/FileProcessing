@@ -16,7 +16,7 @@
 
 @end
 
-static const NSInteger maxBufLength = 1024;
+static const NSInteger maxBufLength = 512;
 
 @implementation FileStreamParser
 
@@ -34,9 +34,10 @@ static const NSInteger maxBufLength = 1024;
 {
     iStream = [[NSInputStream alloc] initWithFileAtPath:path];
     [iStream setDelegate:self];
-    [iStream scheduleInRunLoop:[NSRunLoop mainRunLoop]
-                       forMode:NSRunLoopCommonModes];
+    [iStream scheduleInRunLoop:[NSRunLoop currentRunLoop]
+                       forMode:NSDefaultRunLoopMode];
     [iStream open];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:5]];
 }
 
 #pragma mark - NSStreamdelegate - 
@@ -60,26 +61,30 @@ static const NSInteger maxBufLength = 1024;
                 [data appendBytes:buf length:len];
                 bytesRead += len;
                 
-                if (bytesRead > maxBufLength) {
-                    NSString *stringToAnalyse = [[NSString alloc] initWithData: data
-                                                                      encoding: NSWindowsCP1251StringEncoding];
-                    NSLog(@"buffered string %@", stringToAnalyse);
-                    bytesRead = 0;
-                    data = [[NSMutableData alloc] init];
-                }
+                NSString *stringToAnalyse = [[NSString alloc] initWithData: data
+                                                                  encoding: NSWindowsCP1251StringEncoding];
+                NSLog(@"buffered string %@", stringToAnalyse);
             } else {
                 NSLog(@"no buffer");
             }
-            
+            break;
         }
             
-        break;
-        
         case NSStreamEventOpenCompleted:
+        {
+            NSLog(@"Open completed");
             break;
+        }
             
-        
+        case NSStreamEventEndEncountered:
+        {
+            NSLog(@"End of file encountered");
             
+            [iStream close];
+            [iStream removeFromRunLoop: [NSRunLoop currentRunLoop]
+                               forMode: NSDefaultRunLoopMode];
+            break;
+        }
         default:
             break;
     }
