@@ -8,18 +8,15 @@
 
 #import "FileStreamParser.h"
 
-@interface FileStreamParser ()<NSStreamDelegate> {
-    NSInputStream *iStream;
-    NSMutableData *data;
-    NSInteger bytesRead;
-}
+@interface FileStreamParser ()
 
 @property (nonatomic, strong) CompletionBlock completion;
 @property (nonatomic, strong) StringProcessingBlock processingBlock;
+@property (nonatomic, strong) NSString *processedString;
 
 @end
 
-static const NSInteger maxBufLength = 512;
+static const NSInteger maxLength = 12;
 
 @implementation FileStreamParser
 
@@ -31,90 +28,58 @@ static const NSInteger maxBufLength = 512;
         self.completion = completionBlock;
         self.processingBlock = processingBlock;
 
-        [self setUpStreamForFile:path];
+        self.processedString = [NSString stringWithContentsOfFile: path
+                                                         encoding: NSWindowsCP1251StringEncoding
+                                                            error: nil];
+        [self processString];
     }
     
     return self;
 }
 
-- (void)setUpStreamForFile:(NSString *)path
-{
-    iStream = [[NSInputStream alloc] initWithFileAtPath:path];
-    [iStream setDelegate:self];
-    
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
-    
-    dispatch_async(queue, ^{
-        [iStream scheduleInRunLoop:[NSRunLoop currentRunLoop]
-                           forMode:NSDefaultRunLoopMode];
-        [iStream open];
+- (void)processString {
+    NSMutableArray *result = [NSMutableArray new];
+    NSArray *strings = [self.processedString componentsSeparatedByString:@"\n"];
+    for (NSString *string in strings) {
+        if ([string containsString:@"ый"]) {
+            continue;
+        }
         
-        [[NSRunLoop currentRunLoop] run];
-    });
-    
-}
-
-#pragma mark - NSStreamdelegate - 
-
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode
-{
-    switch (eventCode)
-    {
-        case NSStreamEventHasBytesAvailable:
-        {
-            if (!data) {
-                data = [[NSMutableData alloc] init];
-            }
-            
-            uint8_t buf[maxBufLength];
-            
-            NSInteger len = 0;
-            len = [(NSInputStream*)aStream read:buf maxLength:maxBufLength];
-            
-            if (len) {
-                [data appendBytes:buf length:len];
-                bytesRead += len;
-                
-                NSString *stringToAnalyse = [[NSString alloc] initWithData: data
-                                                                  encoding: NSWindowsCP1251StringEncoding];
-                if (self.processingBlock)
-                {
-                    self.processingBlock(stringToAnalyse);
-                }
-                
-            } else {
-                NSLog(@"no buffer");
-            }
-            break;
+        else if ([string containsString:@"ий"]) {
+            continue;
         }
-            
-        case NSStreamEventOpenCompleted:
-        {
-            NSLog(@"Open completed");
-            break;
+        
+        else if (string.length > maxLength) {
+            continue;
         }
-            
-        case NSStreamEventEndEncountered:
-        {
-            NSLog(@"End of file encountered");
-            
-            [iStream close];
-            [iStream removeFromRunLoop: [NSRunLoop currentRunLoop]
-                               forMode: NSDefaultRunLoopMode];
-            
-            if (self.completion) {
-                self.completion();
-            }
-
-            break;
+        else if ([self stringContainsUppercaseString:string]) {
+            continue;
         }
-        default:
-            break;
+        else if ([string containsString:@"нин"]) {
+            continue;
+        }
+        else if ([string containsString:@"ть"]) {
+            continue;
+        }
+        else if([string containsString:@"ой"]) {
+            continue;
+        }
+        
+        
+        
+        [result addObject:string];
     }
+    
+    NSLog(@"%@", result);
 }
 
-- (void)setFilePath:(NSString *)filePath {
+
+
+- (BOOL)stringContainsUppercaseString:(NSString*)string
+{
+    NSCharacterSet *set = [NSCharacterSet uppercaseLetterCharacterSet];
     
+    return [string rangeOfCharacterFromSet:set].location != NSNotFound;
 }
 
 @end
