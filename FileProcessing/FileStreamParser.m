@@ -16,7 +16,7 @@
 
 @end
 
-static const NSInteger maxLength = 12;
+static const NSInteger maxLength = 10;
 
 @implementation FileStreamParser
 
@@ -49,6 +49,11 @@ static const NSInteger maxLength = 12;
             continue;
         }
         
+        else if ([string containsString:@"ньк"]) {
+            continue;
+        }
+
+        
         else if (string.length > maxLength) {
             continue;
         }
@@ -64,8 +69,99 @@ static const NSInteger maxLength = 12;
         else if([string containsString:@"ой"]) {
             continue;
         }
+        else if([self isString:string containingStringInTheEnd:@"но"]) {
+            continue;
+        }
         
+        else if([self isString:string containingStringInTheEnd:@"ее"]) {
+            continue;
+        }
         
+        else if([self isString:string containingStringInTheEnd:@"то"]) {
+            continue;
+        }
+
+        else if ([self isString:string containingStringInTheEnd:@"ски"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ин"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ое"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ие"]) {
+            continue;
+        }
+
+
+        else if([self isString:string containingStringInTheEnd:@"ще"]) {
+            continue;
+        }
+
+        else if([self isString:string containingStringInTheEnd:@"ит"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ид"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ент"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ез"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"изм"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"из"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ти"]) {
+            continue;
+        }
+
+        else if([self isString:string containingStringInTheEnd:@"ат"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"о"]) {
+            continue;
+        }
+
+        else if([self isString:string containingStringInTheEnd:@"че"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"же"]) {
+            continue;
+        }
+
+        else if([self isString:string containingStringInTheEnd:@"ре"]) {
+            continue;
+        }
+        
+        else if([self isString:string containingStringInTheEnd:@"ше"]) {
+            continue;
+        }
+
+        else if([self isString:string containingStringInTheEnd:@"ечь"]) {
+            continue;
+        }
+
+        
+        else if (![self isCorrectString:string]) {
+            continue;
+        }
         
         [result addObject:string];
     }
@@ -73,7 +169,22 @@ static const NSInteger maxLength = 12;
     NSLog(@"%@", result);
 }
 
+- (BOOL)isString:(NSString*)string containingStringInTheEnd:(NSString*)searchString{
+    NSRange range = [string rangeOfString:searchString];
+    
+    if (range.location == string.length-searchString.length-1) {
+        return YES;
+    }
+    
+    return NO;
+}
 
+- (BOOL)isCorrectString:(NSString*)string {
+    NSMutableCharacterSet *set = [NSCharacterSet punctuationCharacterSet].mutableCopy;
+//    [set formIntersectionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
+    
+    return [string rangeOfCharacterFromSet:set].location == NSNotFound;
+}
 
 - (BOOL)stringContainsUppercaseString:(NSString*)string
 {
