@@ -14,11 +14,16 @@ int main(int argc, const char * argv[]) {
         NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"Vocabulary" withExtension:@"bundle"];
         NSBundle *bundle = [NSBundle bundleWithURL:bundleURL];
         NSString *path = [bundle pathForResource:@"file" ofType:@"txt"];
-
+        
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         FileStreamParser *parser = [[FileStreamParser alloc] initWithPath:path
                                                       withProcessingBlock:^(NSString *string) {
                                                           NSLog(@"string %@", string);
+                                                          
+                                                          
+                                                          if (![string containsString:@"ый"]) {
+                                                              
+                                                          }
                                                       }
                                                       withCompletionBlock:^{
                                                           NSLog(@"completion");
