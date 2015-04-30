@@ -166,7 +166,14 @@ static const NSInteger maxLength = 10;
         [result addObject:string];
     }
     
-    NSLog(@"%@", result);
+    NSString *documentPath = [documentDirectory() stringByAppendingString:@"/result.plist"];
+    [result writeToFile:documentPath atomically:YES];
+}
+
+NSString* documentDirectory() {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
+    return basePath;
 }
 
 - (BOOL)isString:(NSString*)string containingStringInTheEnd:(NSString*)searchString{
